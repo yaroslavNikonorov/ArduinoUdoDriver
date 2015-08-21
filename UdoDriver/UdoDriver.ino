@@ -232,19 +232,22 @@ void editClockSettings(){
   switch(type){
     case SECOND:
     case MINUTE:
+      clockEdit[type]=++clockEdit[type]%60;
+      break;
     case HOUR:
-      clockEdit[type]=clockEdit[type]++%60;
+      clockEdit[type]=++clockEdit[type]%24;
       break;
     case DAYOFWEEK:
-      clockEdit[type]=1+(clockEdit[type]++%7);
+      clockEdit[type]=1+clockEdit[type]%7;
       break;
     case DAYOFMONTH:
-      clockEdit[type]=1+(clockEdit[type]++%31);
+      clockEdit[type]=1+clockEdit[type]%31;
       break;
     case MONTH:
-      clockEdit[type]=1+(clockEdit[type]++%12);
+      clockEdit[type]=1+clockEdit[type]%12;
+      break;
     case YEAR:
-      clockEdit[type]++;
+      clockEdit[type]=1+clockEdit[type]%20;
       break;
   }
   menuSwitched=true;
@@ -385,29 +388,33 @@ void setDS3231time(byte dateTime, byte type)
 {
   // sets time and date data to DS3231
   Wire.beginTransmission(DS3231_I2C_ADDRESS);
-  Wire.write(0); // set next input to start at the seconds register
   switch(type){
     case SECOND:
+      Wire.write(0);
       Wire.write(decToBcd(dateTime)); // set seconds
       break;
     case MINUTE:
+      Wire.write(1);
       Wire.write(decToBcd(dateTime)); // set minutes
       break;
     case HOUR:
+      Wire.write(2);
       Wire.write(decToBcd(dateTime)); // set hours
       break;
     case DAYOFWEEK:
+      Wire.write(3);
       Wire.write(decToBcd(dateTime)); // set day of week (1=Sunday, 7=Saturday)
       break;
     case DAYOFMONTH:
-      lcd.clear();
-      lcd.print(dateTime);
+      Wire.write(4);
       Wire.write(decToBcd(dateTime)); // set date (1 to 31)
       break;
     case MONTH:
+      Wire.write(5);
       Wire.write(decToBcd(dateTime)); // set month
       break;
     case YEAR:
+      Wire.write(6);
       Wire.write(decToBcd(dateTime)); // set year (0 to 99)
       break;
   }
