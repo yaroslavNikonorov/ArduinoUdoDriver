@@ -38,6 +38,7 @@ int ledState=LOW;
 //constants level three
 #define DONOTEDIT 0
 #define EDIT 1
+#define SELECTED 2
 
 //const
 #define NOTHING 255
@@ -50,6 +51,7 @@ boolean menuSwitched=false;
 #define LEVEL_TWO 1
 #define LEVEL_THREE 2
 #define LEVEL_FOUR 3
+#define LEVEL_FIVE 4
 
 //Main menu 
 String mainMenu[]={"Clock settings", "Servo settings", "Light settings"};
@@ -80,6 +82,35 @@ String lightMenu[]={"Turn off", "Turn on"};
 #define NUMLIGHTMENU 2
 byte lightState=EEPROM.read(0);
 
+//Servo settings
+#define SERVO_ONE 0
+#define SERVO_TWO 1
+#define SERVO_THREE 2
+#define SERVO_FOUR 3
+
+#define SERVO_ONE_PIN 5
+#define SERVO_TWO_PIN 6
+#define SERVO_THREE_PIN 9
+#define SERVO_FOUR_PIN 10
+
+#define SERVO_ENABLE 1
+#define SERVO_DISABLE 0
+
+#define SERVO_ISENABLED 0
+#define SERVO_DAY 1
+#define SERVO_HOUR 2
+#define SERVO_MINUTE 3
+#define SERVO_ANGEL 4
+#define SERVO_NUMBEROFTIMES 5
+
+Servo servos[4];
+
+String servoSettingsString[]={"E", "D", "H", "M", "Ang", "Num"};
+byte editServoSetting=0;
+
+#define SERVO_COUNT 4
+#define SERVO_SETTINGS_COUNT 6
+
 
 void setup()
 {
@@ -94,6 +125,17 @@ void setup()
   }
   printLCD=&showCurrentDateTime;
   menuSwitched=true;
+  
+  //Servo
+  servos[SERVO_ONE].attach(SERVO_ONE_PIN);
+  servos[SERVO_ONE].write(0);
+  servos[SERVO_TWO].attach(SERVO_TWO_PIN);
+  servos[SERVO_TWO].write(0);
+  servos[SERVO_THREE].attach(SERVO_THREE_PIN);
+  servos[SERVO_THREE].write(0);
+  servos[SERVO_FOUR].attach(SERVO_FOUR_PIN);
+  servos[SERVO_FOUR].write(0);
+
 }
 
 void buttonHandler(){
@@ -142,6 +184,7 @@ void btnOneHandler(){
   }
   menuTree[LEVEL_THREE]=NOTHING;
   menuTree[LEVEL_FOUR]=NOTHING;
+  menuTree[LEVEL_FIVE]=NOTHING;
   menuSwitched=true;
 }
 
@@ -309,9 +352,88 @@ String getEmptyString(String str){
   return empty;
 }
 
-
-
+//Servo 
 void servoSettingHandler(byte btn){
+    if(menuTree[LEVEL_THREE]==DONOTEDIT&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]==NOTHING&&btn==BTN_TWO){
+      menuTree[LEVEL_FOUR]=++menuTree[LEVEL_FOUR]%4;
+      displayUpdated=true;
+    }else if(menuTree[LEVEL_THREE]==DONOTEDIT&&menuTree[LEVEL_FOUR]==NOTHING&&menuTree[LEVEL_FIVE]==NOTHING&&btn==BTN_THREE){
+      menuTree[LEVEL_FOUR]=SERVO_ONE;
+      printLCD=&chooseServoShow;
+      displayUpdated=true;
+    }else if(menuTree[LEVEL_THREE]==DONOTEDIT&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]==NOTHING&&btn==BTN_THREE){
+      menuTree[LEVEL_THREE]=SELECTED;
+      menuTree[LEVEL_FIVE]=SERVO_ISENABLED;
+      displayUpdated=true;
+      printLCD=&servoSettingsShow;
+    }else if(menuTree[LEVEL_THREE]==SELECTED&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]!=NOTHING&&btn==BTN_TWO){
+      menuTree[LEVEL_FIVE]=++menuTree[LEVEL_FIVE]%SERVO_SETTINGS_COUNT;
+      displayUpdated=true;
+    }else if(menuTree[LEVEL_THREE]==SELECTED&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]!=NOTHING&&btn==BTN_THREE){
+      menuTree[LEVEL_THREE]=EDIT;
+      editServoSetting=getServoSetting(menuTree[LEVEL_FOUR], menuTree[LEVEL_FIVE]);
+      printLCD=&servoSettingsEditShow;
+      displayUpdated=true;
+    }else if(menuTree[LEVEL_THREE]==EDIT&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]!=NOTHING&&btn==BTN_TWO){
+      servoSettingsEdit();
+      displayUpdated=true;
+    }else if(menuTree[LEVEL_THREE]==EDIT&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]!=NOTHING&&btn==BTN_THREE){
+      servoSettingsSave();
+      menuTree[LEVEL_THREE]=SELECTED;
+      displayUpdated=true;
+      printLCD=&servoSettingsShow;
+    }
+}
+
+void chooseServoShow(){
+  if(displayUpdated){
+    lcd.clear();
+    lcd.print("Servo "+String(1+menuTree[LEVEL_FOUR]));
+    displayUpdated=false;
+  }
+}
+
+void servoSettingsShow(){
+  String settingsString[6];
+    if(millis()-lastTimeBlinked>BLINK_INTERVAL){
+      String settingsString[6];
+
+      for(byte i=0;i<SERVO_SETTINGS_COUNT;i++){
+        settingsString[i]=servoSettingsString[i]+":"+String(getServoSetting(menuTree[LEVEL_FOUR], i));
+      }
+  
+    if(clockEditBlink==true){
+      settingsString[menuTree[LEVEL_FIVE]]=getEmptyString(settingsString[menuTree[LEVEL_FIVE]]);
+      clockEditBlink=false;
+    }else{
+      clockEditBlink=true;
+    }
+    
+    String firstString = settingsString[SERVO_ISENABLED]+","+settingsString[SERVO_DAY]+","+settingsString[SERVO_ANGEL];
+    lcd.setCursor(0,0);
+    lcd.print(firstString);
+    String secondString = settingsString[SERVO_HOUR]+","+settingsString[SERVO_MINUTE]+","+settingsString[SERVO_NUMBEROFTIMES];
+    lcd.setCursor(0,1);
+    lcd.print(secondString);
+    lastTimeBlinked=millis();
+  }
+
+}
+
+void servoSettingsEditShow(){
+  if(displayUpdated){
+    lcd.clear();
+    lcd.print(editServoSetting);
+    displayUpdated=false;
+  }
+}
+
+void servoSettingsEdit(){
+  editServoSetting=++editServoSetting%60;
+}
+
+void servoSettingsSave(){
+  setServoSetting(menuTree[LEVEL_FOUR], menuTree[LEVEL_FIVE], editServoSetting);
 }
 
 void lightSettingHandler(byte btn){
@@ -382,6 +504,18 @@ void switchMenu(){
     }
   showMenu();  
   menuSwitched=true;
+}
+
+byte getEEPROMAddress(byte servoNum, byte settingsNum){
+  return 10+servoNum*SERVO_SETTINGS_COUNT+settingsNum;
+}
+
+byte getServoSetting(byte servoNum, byte settingsNum){
+  return EEPROM.read(getEEPROMAddress(servoNum, settingsNum));
+}
+
+void setServoSetting(byte servoNum, byte settingsNum, byte setting){
+  EEPROM.write(getEEPROMAddress(servoNum, settingsNum), setting);
 }
 
 void setDS3231time(byte dateTime, byte type)
