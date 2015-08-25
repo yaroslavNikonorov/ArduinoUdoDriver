@@ -102,14 +102,15 @@ byte lightState=EEPROM.read(0);
 #define SERVO_MINUTE 3
 #define SERVO_ANGEL 4
 #define SERVO_NUMBEROFTIMES 5
+#define SERVO_RUNNOW 6
 
 Servo servos[4];
 
-String servoSettingsString[]={"E", "D", "H", "M", "Ang", "Num"};
+String servoSettingsString[]={"Enabled", "Day", "Hour", "Minute", "Angel", "Times", "Run now"};
 byte editServoSetting=0;
 
 #define SERVO_COUNT 4
-#define SERVO_SETTINGS_COUNT 6
+#define SERVO_SETTINGS_COUNT 7
 
 
 void setup()
@@ -394,30 +395,13 @@ void chooseServoShow(){
 }
 
 void servoSettingsShow(){
-  String settingsString[6];
-    if(millis()-lastTimeBlinked>BLINK_INTERVAL){
-      String settingsString[6];
-
-      for(byte i=0;i<SERVO_SETTINGS_COUNT;i++){
-        settingsString[i]=servoSettingsString[i]+":"+String(getServoSetting(menuTree[LEVEL_FOUR], i));
-      }
-  
-    if(clockEditBlink==true){
-      settingsString[menuTree[LEVEL_FIVE]]=getEmptyString(settingsString[menuTree[LEVEL_FIVE]]);
-      clockEditBlink=false;
-    }else{
-      clockEditBlink=true;
-    }
-    
-    String firstString = settingsString[SERVO_ISENABLED]+","+settingsString[SERVO_DAY]+","+settingsString[SERVO_ANGEL];
-    lcd.setCursor(0,0);
-    lcd.print(firstString);
-    String secondString = settingsString[SERVO_HOUR]+","+settingsString[SERVO_MINUTE]+","+settingsString[SERVO_NUMBEROFTIMES];
-    lcd.setCursor(0,1);
-    lcd.print(secondString);
-    lastTimeBlinked=millis();
+  if(displayUpdated){
+    if
+     String settings=servoSettingsString[menuTree[LEVEL_FIVE]]+": "+String(getServoSetting(menuTree[LEVEL_FOUR], menuTree[LEVEL_FIVE]));    
+     lcd.clear();
+     lcd.print(settings);
+     displayUpdated=false;
   }
-
 }
 
 void servoSettingsEditShow(){
