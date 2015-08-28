@@ -426,11 +426,35 @@ void servoSettingsEditShow(){
 }
 
 void servoSettingsEdit(){
-  editServoSetting=++editServoSetting%60;
+  editServoSetting=validateServo(menuTree[LEVEL_FIVE], ++editServoSetting);
 }
 
 void servoSettingsSave(){
   setServoSetting(menuTree[LEVEL_FOUR], menuTree[LEVEL_FIVE], editServoSetting);
+}
+
+byte validateServo(byte type, byte value){
+  switch(type){
+    case SERVO_ISENABLED:
+      value=value%2;
+      break;
+    case SERVO_DAY:
+          value=value%32;
+      break;
+    case SERVO_HOUR:
+          value=value%24;
+      break;
+    case SERVO_MINUTE:
+          value=value%60;
+      break;
+    case SERVO_ANGEL:
+          value=value%91;
+      break;
+    case SERVO_NUMBEROFTIMES:
+          value=value%20;
+      break;
+  }
+  return value;
 }
 
 //Light
