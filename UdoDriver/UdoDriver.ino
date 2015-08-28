@@ -44,7 +44,7 @@ int ledState=LOW;
 #define NOTHING 255
 
 //Menu tree
-byte menuTree[]={CLOCK,CLOCK_SETTINGS,NOTHING,NOTHING};
+byte menuTree[]={CLOCK,CLOCK_SETTINGS,NOTHING,NOTHING,NOTHING};
 //levels
 #define LEVEL_ONE 0
 #define LEVEL_TWO 1
@@ -163,8 +163,6 @@ void menuHandler(){
       switch(i){
         case 0:
           btnOneHandler();
-          lcd.clear();
-          lcd.print("Works");
           break;
         case 1:
           btnTwoHandler();
@@ -359,7 +357,8 @@ String getEmptyString(String str){
   return empty;
 }
 
-//Servo 
+//Servo
+//void servoSettingHandler(byte btn){}
 void servoSettingHandler(byte btn){
     if(menuTree[LEVEL_THREE]==DONOTEDIT&&menuTree[LEVEL_FOUR]!=NOTHING&&menuTree[LEVEL_FIVE]==NOTHING&&btn==BTN_TWO){
       menuTree[LEVEL_FOUR]=++menuTree[LEVEL_FOUR]%SERVO_COUNT;
